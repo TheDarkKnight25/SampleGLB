@@ -1,98 +1,26 @@
-﻿<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-	<title>GLB Viewer</title>
-	<style>
-		html, body {
-			margin: 0;
-			padding: 0;
-			overflow: hidden;
-		}
+  <title>3D Model</title>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+  <meta name="generator" content="Geany 1.37.1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-		#container {
-			width: 100%;
-			height: 100%;
-		}
-	</style>
+  <link href="style.css" rel="stylesheet">
+
+  <!-- 💁 Include both scripts below to support all browsers! -->
+  <!-- Loads <model-viewer> for modern browsers: -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+  <!-- Loads <model-viewer> for old browsers like IE11: -->
+  <script nomodule src="https://unpkg.com/@google/model-viewer/dist/model-viewer-legacy.js"></script>
 </head>
+
 <body>
-	<div id="container"></div>
-
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-	<script>
-		const container = document.getElementById('container');
-
-		const renderer = new THREE.WebGLRenderer();
-		renderer.setSize(window.innerWidth, window.innerHeight);
-		container.appendChild(renderer.domElement);
-
-		const scene = new THREE.Scene();
-
-		const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-		camera.position.z = 5;
-
-		const loader = new THREE.GLTFLoader();
-		loader.load(
-			'SP_A.glb',
-			function (gltf) {
-				scene.add(gltf.scene);
-			},
-			undefined,
-			function (error) {
-				console.error(error);
-			}
-		);
-
-		function animate() {
-			requestAnimationFrame(animate);
-			renderer.render(scene, camera);
-		}
-
-		animate();
-
-		// Enable rotation on mouse click and hold
-		let isDragging = false;
-		let previousMousePosition = {
-			x: 0,
-			y: 0
-		};
-
-		container.addEventListener('mousedown', function (event) {
-			isDragging = true;
-		});
-
-		container.addEventListener('mouseup', function (event) {
-			isDragging = false;
-		});
-
-		container.addEventListener('mousemove', function (event) {
-			if (!isDragging) {
-				return;
-			}
-
-			const deltaMove = {
-				x: event.offsetX - previousMousePosition.x,
-				y: event.offsetY - previousMousePosition.y
-			};
-
-			const deltaRotationQuaternion = new THREE.Quaternion()
-				.setFromEuler(new THREE.Euler(
-					toRadians(deltaMove.y * 1),
-					toRadians(deltaMove.x * 1),
-					0,
-					'XYZ'
-				));
-
-			scene.quaternion.multiplyQuaternions(deltaRotationQuaternion, scene.quaternion);
-			previousMousePosition = {
-				x: event.offsetX,
-				y: event.offsetY
-			};
-		});
-
-		function toRadians(angle) {
-			return angle * (Math.PI / 180);
-		}
-	</script>
+  <!-- 3D content for your site: -->
+  <model-viewer src="scene.gltf" alt="A 3D model of a car" shadow-intensity="1" camera-controls auto-rotate ar>
+  </model-viewer>
 </body>
+
 </html>
