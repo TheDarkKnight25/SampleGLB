@@ -32,15 +32,14 @@ loader.load(
   }
 );
 
-// Add event listeners for mouse movements
+// Add event listeners for mouse and touch movements
 let isDragging = false;
 let previousMousePosition = {
   x: 0,
   y: 0
 };
 
-// Quaternion-based camera rotation
-const cameraQuaternion = new THREE.Quaternion();
+const touchStart = { x: 0, y: 0 };
 
 document.addEventListener('mousedown', function (event) {
   isDragging = true;
@@ -51,21 +50,51 @@ document.addEventListener('mouseup', function (event) {
 });
 
 document.addEventListener('mousemove', function (event) {
+  handleMouseMovement(event.offsetX, event.offsetY);
+});
+
+document.addEventListener('touchstart', function (event) {
+  isDragging = true;
+  touchStart.x = event.touches[0].clientX;
+  touchStart.y = event.touches[0].clientY;
+});
+
+document.addEventListener('touchend', function (event) {
+  isDragging = false;
+});
+
+document.addEventListener('touchmove', function (event) {
+  const touchX = event.touches[0].clientX;
+  const touchY = event.touches[0].clientY;
+
+  const deltaMove = {
+    x: touchX - touchStart.x,
+    y: touchY - touchStart.y
+  };
+
+  handleMouseMovement(touchX, touchY, deltaMove);
+
+  touchStart.x = touchX;
+  touchStart.y = touchY;
+});
+
+// Handle mouse and touch movement
+function handleMouseMovement(x, y, deltaMove) {
   if (isDragging) {
-    const deltaMove = {
-      x: event.offsetX - previousMousePosition.x,
-      y: event.offsetY - previousMousePosition.y
+    const delta = deltaMove || {
+      x: x - previousMousePosition.x,
+      y: y - previousMousePosition.y
     };
 
     const rotationSpeed = 0.003;
-    const deltaQuaternionX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -deltaMove.y * rotationSpeed);
-    const deltaQuaternionY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaMove.x * rotationSpeed);
+    const deltaQuaternionX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -delta.y * rotationSpeed);
+    const deltaQuaternionY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -delta.x * rotationSpeed);
 
     // Remove the z component of the deltaQuaternionX and deltaQuaternionY to disable roll rotation
     deltaQuaternionX.z = 0;
     deltaQuaternionY.z = 0;
 
-    const newCameraQuaternion = cameraQuaternion.clone();
+    const newCameraQuaternion = camera.quaternion.clone();
     newCameraQuaternion.premultiply(deltaQuaternionY).multiply(deltaQuaternionX);
 
     const euler = new THREE.Euler().setFromQuaternion(newCameraQuaternion, 'YXZ');
@@ -80,19 +109,19 @@ document.addEventListener('mousemove', function (event) {
 
     newCameraQuaternion.setFromEuler(euler);
 
-    cameraQuaternion.copy(newCameraQuaternion);
+    camera.quaternion.copy(newCameraQuaternion);
 
     // Update camera direction vector based on the new rotation
     const direction = new THREE.Vector3(0, 0, -1);
-    direction.applyQuaternion(cameraQuaternion);
+    direction.applyQuaternion(camera.quaternion);
     camera.lookAt(camera.position.clone().add(direction));
   }
 
   previousMousePosition = {
-    x: event.offsetX,
-    y: event.offsetY
+    x: x,
+    y: y
   };
-});
+}
 
 // Movement variables
 const movementSpeed = 0.1;
@@ -132,7 +161,7 @@ function handleMovement(keyCode, isPressed) {
   }
 }
 
-// // Display rotation and position values
+// Display rotation and position values
 const displayContainer = document.createElement('div');
 displayContainer.style.position = 'absolute';
 displayContainer.style.top = '10px';
@@ -172,7 +201,7 @@ function animation(time) {
   }
 
   // Apply rotation around Y-axis to the movement vector
-  const rotation = new THREE.Euler().setFromQuaternion(cameraQuaternion, 'YXZ');
+  const rotation = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ');
   const rotationY = THREE.MathUtils.radToDeg(rotation.y);
   movementVector.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation.y);
 
@@ -184,12 +213,10 @@ function animation(time) {
   // Update rotation and position display
   const rotationX = THREE.MathUtils.radToDeg(rotation.x);
   const rotationZ = THREE.MathUtils.radToDeg(rotation.z);
-  
+
   rotationDisplay.textContent = `Camera Rotation (X, Y, Z): ${rotationX.toFixed(2)}°, ${rotationY.toFixed(2)}°, ${rotationZ.toFixed(2)}°`;
   positionDisplay.textContent = `Camera Position (X, Y, Z): ${camera.position.x.toFixed(2)}, ${camera.position.y.toFixed(2)}, ${camera.position.z.toFixed(2)}`;
 
   // Render the scene
   renderer.render(scene, camera);
 }
-
-
