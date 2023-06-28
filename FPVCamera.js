@@ -1,12 +1,28 @@
 import * as THREE from 'three';
 import { GLTFLoader } from './three.js/examples/jsm/loaders/GLTFLoader.js';
 
-export function createFPVCamera(gltfPath, movementSpeed, rotationSpeed, minRotationX, maxRotationX, positionRangeX, positionRangeZ, debugCallback) {
+export function createFPVCamera(
+  gltfPath,
+  movementSpeed,
+  rotationSpeed,
+  minRotationX,
+  maxRotationX,
+  positionRangeX,
+  positionRangeZ,
+  initialPosition,
+  initialRotation,
+  debugCallback
+) {
   // Init
   const scene = new THREE.Scene();
 
   const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.set(0, 2, 0); // Adjust the camera height by modifying the Y position
+  camera.position.copy(initialPosition); // Set initial camera position
+  camera.rotation.set(
+    THREE.MathUtils.degToRad(initialRotation.x),
+    THREE.MathUtils.degToRad(initialRotation.y),
+    THREE.MathUtils.degToRad(initialRotation.z)
+  ); // Set initial camera rotation
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
